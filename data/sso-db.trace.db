@@ -1,0 +1,16 @@
+2025-09-21 00:19:51.162304+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "insert into [*]user (email,password,username,id) values (?,?,?,default)"; expected "identifier"; SQL statement:
+insert into user (email,password,username,id) values (?,?,?,default) [42001-224]
+2025-09-21 00:21:38.210199+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "APP_USER" not found (this database is empty); SQL statement:
+insert into app_user (email,password,username,id) values (?,?,?,default) [42104-224]
+2025-09-21 01:43:07.156982+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLDataException: Data conversion error converting "TIMESTAMP '2025-09-21 01:11:26.986492' (APP_USER_COPY_3_0: ""REGISTRATION_TIME"" BIGINT NOT NULL)"; SQL statement:
+INSERT INTO "PUBLIC"."APP_USER_COPY_3_0"("ID", "ACTIVATED", "EMAIL", "PASSWORD", "REGISTRATION_TIME", "USERNAME") OVERRIDING SYSTEM VALUE SELECT "ID", "ACTIVATED", "EMAIL", "PASSWORD", "REGISTRATION_TIME", "USERNAME" FROM "PUBLIC"."APP_USER" [22018-224]
+2025-09-21 01:43:10.396499+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLDataException: Data conversion error converting "TIMESTAMP to BIGINT" [22018-224]
+2025-09-21 01:43:20.053065+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLDataException: Data conversion error converting "TIMESTAMP to BIGINT" [22018-224]
+2025-09-21 01:43:30.052144+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "APP_USER" not found (this database is empty); SQL statement:
+select u1_0.id,u1_0.activated,u1_0.email,u1_0.password,u1_0.registration_time,u1_0.username from app_user u1_0 [42104-224]
