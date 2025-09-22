@@ -7,5 +7,117 @@
 <body>
     <h2>Welcome, <span th:text="${#authentication.name}"></span>!</h2>
     <a th:href="@{/logout}">Logout</a>
+    <div id="token-log" style="margin:20px 0; padding:10px; border:1px solid #ccc; background:#f9f9f9; max-width:600px;"></div>
+    <script>
+        // Utility functions
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+        function getExpiry() {
+            return parseInt(localStorage.getItem('expiry'));
+        }
+        function setToken(token, expiry) {
+            localStorage.setItem('token', token);
+            localStorage.setItem('expiry', expiry);
+        }
+        function clearToken() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('expiry');
+        }
+
+        function logTokenAction(action, data) {
+            const logDiv = document.getElementById('token-log');
+            const time = new Date().toLocaleTimeString();
+            let msg = `[${time}] ${action}: `;
+            if (data) {
+                if (typeof data === 'object') {
+                    msg += JSON.stringify(data);
+                } else {
+                    msg += data;
+                }
+            }
+            logDiv.innerHTML += msg + '<br>';
+        }
+
+        // Validate token on page load
+        async function validateToken() {
+            const token = getToken();
+            const expiry = getExpiry();
+            const now = Date.now();
+            if (!token || !expiry || now > expiry) {
+                logTokenAction('validate', 'No token or expired');
+                clearToken();
+                window.location.href = '/login';
+                return;
+            }
+            const res = await fetch('/temporary-token/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'token=' + encodeURIComponent(token)
+            });
+            const data = await res.json();
+            logTokenAction('validate', data);
+            if (!data.valid || now > data.expiry) {
+                clearToken();
+                window.location.href = '/login';
+            } else {
+                setToken(token, data.expiry);
+                scheduleRefresh(data.expiry);
+            }
+        }
+
+        // Schedule token refresh before expiry
+        function scheduleRefresh(expiry) {
+            const now = Date.now();
+            let refreshTime = expiry - now - 30000; // 30 seconds before expiry
+            if (refreshTime <= 0) {
+                refreshToken();
+            } else {
+                setTimeout(refreshToken, refreshTime);
+            }
+        }
+
+        // Refresh token
+        async function refreshToken() {
+            const token = getToken();
+            const res = await fetch('/temporary-token/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'token=' + encodeURIComponent(token)
+            });
+            if (res.ok) {
+                const data = await res.json();
+                logTokenAction('refresh', data);
+                setToken(data.token, data.expiry);
+                scheduleRefresh(data.expiry);
+            } else {
+                logTokenAction('refresh', 'Failed to refresh');
+                clearToken();
+                window.location.href = '/login';
+            }
+        }
+
+        // Logout
+        async function logout() {
+            const token = getToken();
+            if (token) {
+                const res = await fetch('/temporary-token/invalidate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'token=' + encodeURIComponent(token)
+                });
+                const data = await res.json();
+                logTokenAction('invalidate', data);
+            } else {
+                logTokenAction('invalidate', 'No token to invalidate');
+            }
+            clearToken();
+            window.location.href = '/login';
+        }
+
+        // On page load
+        window.onload = validateToken;
+    </script>
+    <button onclick="logout()">Logout</button>
 </body>
 </html>
